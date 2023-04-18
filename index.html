@@ -364,7 +364,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h2><p>​Spring Beans RCE其实就是一个变量覆盖漏洞，其前身为CVE-2010-1622，CVE-2010-1622可以利用参数绑定机制对数组进行变量覆盖，使得class.classLoader.URLs[]可控，再利用渲染机制从网络获取恶意的jar包，从而执行任意命令；在JDK修复后限制了<code>beanClass</code>为<code>Class</code>和属性的<code>name</code>为<code>classLoader</code>的调用情形，导致无法绕过，但JDK9之后多了一个module，如<code>class.module.classLoader</code>，这样module就满足第一个条件，而不去判断第二个条件，从而绕过黑名单，所以该漏洞本质上是对CVE-2010-1622漏洞在新版本上的一个绕过再利用。</p>
+          <h2 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h2><p>Spring Beans RCE其实就是一个变量覆盖漏洞，其前身为CVE-2010-1622，CVE-2010-1622可以利用参数绑定机制对数组进行变量覆盖，使得class.classLoader.URLs[]可控，再利用渲染机制从网络获取恶意的jar包，从而执行任意命令；在JDK修复后限制了<code>beanClass</code>为<code>Class</code>和属性的<code>name</code>为<code>classLoader</code>的调用情形，导致无法绕过，但JDK9之后多了一个module，如<code>class.module.classLoader</code>，这样module就满足第一个条件，而不去判断第二个条件，从而绕过黑名单，所以该漏洞本质上是对CVE-2010-1622漏洞在新版本上的一个绕过再利用。</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2023/01/12/Spring-Beans-RCE%EF%BC%88CVE-2022-22965%EF%BC%89%E6%BC%8F%E6%B4%9E%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/#more" rel="contents">

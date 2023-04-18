@@ -225,7 +225,7 @@
 <p>打开设置，配置如下</p>
 <p><img src="/2023/03/17/Windows%E4%B8%8B%E9%85%8D%E7%BD%AEPHP%E6%96%AD%E7%82%B9%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%EF%BC%88phpstudy-PHPStorm-Xdebug%EF%BC%89/1679019550962.png" alt="1679019550962"></p>
 <p>新建一个phpinfo.php文件，拿到php.ini文件位置</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">phpinfo();</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">phpinfo</span>();</span><br></pre></td></tr></table></figure>
 
 <p><img src="/2023/03/17/Windows%E4%B8%8B%E9%85%8D%E7%BD%AEPHP%E6%96%AD%E7%82%B9%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%EF%BC%88phpstudy-PHPStorm-Xdebug%EF%BC%89/1679019618682.png" alt="1679019618682"></p>
 <p>拿到php.ini文件路径：<code>C:\phpstudy_pro\Extensions\php\php5.6.9nts\php.ini</code></p>
@@ -254,7 +254,7 @@
 <p>右上角开启debug模式</p>
 <p><img src="/2023/03/17/Windows%E4%B8%8B%E9%85%8D%E7%BD%AEPHP%E6%96%AD%E7%82%B9%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%EF%BC%88phpstudy-PHPStorm-Xdebug%EF%BC%89/1679021162274.png" alt="1679021162274"></p>
 <h2 id="断点调试"><a href="#断点调试" class="headerlink" title="断点调试"></a>断点调试</h2><p>新建一个<code>debug.php</code>文件用于测试</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">$a=1;</span><br><span class="line">$b=$a+8;</span><br><span class="line">echo $a.&quot; &quot;;</span><br><span class="line">echo $a+1;</span><br><span class="line">echo $a+5;</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$a</span>=<span class="number">1</span>;</span><br><span class="line"><span class="variable">$b</span>=<span class="variable">$a</span>+<span class="number">8</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$a</span>.<span class="string">&quot; &quot;</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$a</span>+<span class="number">1</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$a</span>+<span class="number">5</span>;</span><br></pre></td></tr></table></figure>
 
 <p>点击右上角启用Debug模式</p>
 <p><img src="/2023/03/17/Windows%E4%B8%8B%E9%85%8D%E7%BD%AEPHP%E6%96%AD%E7%82%B9%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%EF%BC%88phpstudy-PHPStorm-Xdebug%EF%BC%89/1679021314056.png" alt="1679021314056"></p>
