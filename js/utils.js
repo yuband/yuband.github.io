@@ -26,9 +26,9 @@ NexT.utils = {
 
       var imageTitle = $image.attr('title') || $image.attr('alt');
       if (imageTitle) {
-        $imageWrapLink.append(`<p class="image-caption">${imageTitle}</p>`);
+        //$imageWrapLink.append(`<p class="image-caption">${imageTitle}</p>`); //主页图片文件名称，注释后不显示
         // Make sure img title tag will show correctly in fancybox
-        $imageWrapLink.attr('title', imageTitle).attr('data-caption', imageTitle);
+        //$imageWrapLink.attr('title', imageTitle).attr('data-caption', imageTitle);  //图片放大后显示名称，注释后不显示
       }
     });
 
