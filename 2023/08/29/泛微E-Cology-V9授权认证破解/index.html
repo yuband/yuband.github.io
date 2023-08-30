@@ -332,7 +332,7 @@
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1693227597894.png" alt="1693227597894"></p>
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1693227661983.png" alt="1693227661983"></p>
 <p>至此，可以确定几个关键字段，但<code>licensecode</code>字段需要继续调试，找到生成原理</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">licensecode<span class="punctuation">:</span> 提交license页面的识别码，暂不清楚如何生成</span><br><span class="line">expiredate<span class="punctuation">:</span> 过期时间，必须大于当前时间</span><br><span class="line">software<span class="punctuation">:</span> 布局变量，在`ReadFromFile`方法中被赋值为`ALL`，当常量字符串处理即可</span><br><span class="line">license<span class="punctuation">:</span> 由六个字段拼接后的字符串，再加密为MD5值</span><br></pre></td></tr></table></figure>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">licensecode<span class="punctuation">:</span> 提交license页面的识别码，暂不清楚如何生成</span><br><span class="line">expiredate<span class="punctuation">:</span> 过期时间，必须大于当前时间</span><br><span class="line">software<span class="punctuation">:</span> 局部变量，在`ReadFromFile`方法中被赋值为`ALL`，当常量字符串处理即可</span><br><span class="line">license<span class="punctuation">:</span> 由六个字段拼接后的字符串，再加密为MD5值</span><br></pre></td></tr></table></figure>
 
 <p>​        从前面的调试可以知道，处理上传的<code>license</code>文件之前，<code>licensecode</code>就已经定了，说明生成时间早于断点处，因此只能靠搜索字符串进行查找，目前调试只用到了<code>ljstln.jar</code>包中的<code>ln.LN</code>和<code>ln.LNParse</code>这两个类，我们可以在这两个类中尝试搜索<code>licensecode</code>字符串</p>
 <p>​         找到了<code>ln.LN</code>类中的<code>MakeLicensecode</code>方法，阅读代码可以知道，该方法将会获取当前主机网卡的MAC地址，并放入集合<code>addrList</code>中，若只有一个MAC地址，则直接使用MD5加密该MAC地址，将得到的密文赋值给<code>licensecode</code>，若有多个MAC地址，则进入for循环，若<code>licensecode</code>为空并且本地无license文件可以获取到<code>licensecode</code>字段，则使用集合中的第一个mac地址的md5值作为<code>licensecode</code></p>
@@ -350,7 +350,7 @@
 <p>成功登录系统，查看license信息，与我们构造的一致</p>
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1693279965175.png" alt="1693279965175"></p>
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1693279977680.png" alt="1693279977680"></p>
-<h2 id="授权破解"><a href="#授权破解" class="headerlink" title="授权破解"></a>授权破解</h2><p>前面通过伪造<code>license</code>文件，再使用lidea的debug工具修改RSA公钥的值，实现了授权认证破解，但这只是短期使用，若重启Resin服务或者循环校验License，将又会回到未授权状态，因此需要一个永久修改RSA公钥的方法，这里有两种方式，下面将分别进行说明演示</p>
+<h2 id="授权破解"><a href="#授权破解" class="headerlink" title="授权破解"></a>授权破解</h2><p>前面通过伪造<code>license</code>文件，再使用idea的debug工具修改RSA公钥的值，实现了授权认证破解，但这只是短期使用，若重启Resin服务或者循环校验License，将又会回到未授权状态，因此需要一个永久修改RSA公钥的方法，这里有两种方式，下面将分别进行说明演示</p>
 <h3 id="反编译修改授权Jar包"><a href="#反编译修改授权Jar包" class="headerlink" title="反编译修改授权Jar包"></a>反编译修改授权Jar包</h3><p>授权的核心Jar包为<code>ljstln.jar</code>，我们使用工具<code>fernflower.jar</code>进行反编译得到java源码</p>
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1693280984454.png" alt="1693280984454"></p>
 <p>反编译后，将<code>LNParse.java</code>文件中的<code>realPublicKey</code>字段修改为自定义的公钥</p>
