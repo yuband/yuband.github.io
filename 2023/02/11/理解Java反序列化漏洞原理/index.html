@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前言​		在众多的开发语言中，Java因其跨平台性和强大的功能库被广泛应用。然而，随着其在业界的广泛使用，Java的安全问题也随之凸显，其中Java反序列化漏洞是近年来引起广泛关注的安全问题。本文旨在深入介绍Java反序列化漏洞，包括其原理，产生的原因，以及通过编写和测试代码来进行分析学习。 了解Java反序列化漏洞​		Java反序列化漏洞是一种严重的安全漏洞，允许攻击者通过构造恶意的序列化对象">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解Java反序列化漏洞原理">
+<meta property="og:url" content="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Yuband&#39;s blog">
+<meta property="og:description" content="前言​		在众多的开发语言中，Java因其跨平台性和强大的功能库被广泛应用。然而，随着其在业界的广泛使用，Java的安全问题也随之凸显，其中Java反序列化漏洞是近年来引起广泛关注的安全问题。本文旨在深入介绍Java反序列化漏洞，包括其原理，产生的原因，以及通过编写和测试代码来进行分析学习。 了解Java反序列化漏洞​		Java反序列化漏洞是一种严重的安全漏洞，允许攻击者通过构造恶意的序列化对象">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690965077523.png">
+<meta property="og:image" content="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690965277308.png">
+<meta property="og:image" content="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690965379076.png">
+<meta property="og:image" content="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690967754745.png">
+<meta property="og:image" content="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690967881264.png">
+<meta property="article:published_time" content="2023-02-11T09:29:18.000Z">
+<meta property="article:modified_time" content="2023-02-11T09:29:18.000Z">
+<meta property="article:author" content="Yuband">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690965077523.png">
+
+<link rel="canonical" href="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>理解Java反序列化漏洞原理 | Yuband's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yuband's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yuband">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yuband's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          理解Java反序列化漏洞原理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-02-11 17:29:18" itemprop="dateCreated datePublished" datetime="2023-02-11T17:29:18+08:00">2023-02-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java-web/" itemprop="url" rel="index"><span itemprop="name">Java web</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java-web/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">反序列化</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>​		在众多的开发语言中，Java因其跨平台性和强大的功能库被广泛应用。然而，随着其在业界的广泛使用，Java的安全问题也随之凸显，其中Java反序列化漏洞是近年来引起广泛关注的安全问题。本文旨在深入介绍Java反序列化漏洞，包括其原理，产生的原因，以及通过编写和测试代码来进行分析学习。</p>
+<h2 id="了解Java反序列化漏洞"><a href="#了解Java反序列化漏洞" class="headerlink" title="了解Java反序列化漏洞"></a>了解Java反序列化漏洞</h2><p>​		Java反序列化漏洞是一种严重的安全漏洞，允许攻击者通过构造恶意的序列化对象，执行任意代码。这类漏洞的严重性在于，反序列化操作在设计上就允许执行序列化对象中定义的任何代码。这就使得攻击者可以利用这一特性，构造恶意的序列化对象，从而在反序列化过程中执行恶意代码。</p>
+<p>​		一个著名的例子是<code>Apache Commons Collections</code>库中的反序列化漏洞，也被称为<code>Mad Gadget</code>。这个漏洞允许攻击者构造一个恶意的序列化对象，该对象包含一个<code>InvokerTransformer</code>对象，这个对象可以在反序列化过程中执行任意代码。这个漏洞影响了许多使用了这个库的Java应用，包括一些流行的开源项目和商业产品。</p>
+<h3 id="什么是序列化和反序列化"><a href="#什么是序列化和反序列化" class="headerlink" title="什么是序列化和反序列化"></a>什么是序列化和反序列化</h3><p>​		序列化（Serialize）是将对象的状态信息转换为字节流的过程，可以将其存储在文件中或在网络中传输。反序列化（Deserialize）则是将这种字节流恢复为对象的过程。序列化的主要目的是保存对象的状态，以便可以在稍后的时间恢复它。反序列化则是用于从这些字节流中恢复对象的状态。</p>
+<p>​		然而，如果反序列化的是一个恶意构造的对象，那么这个过程可能会被恶意利用。因为在反序列化过程中，Java会尝试执行序列化对象中的所有方法和操作，如果这些操作包含恶意代码，则可能会被攻击者恶意利用甚至被拿到主机权限。</p>
+<p>​		可序列化类必须实现 <code>Serializable</code> 和 <code>Externalizable</code> 两个接口之一，很多类已经实现了 <code>Serializable</code> ，这个接口是一个标记接口，它只是表示实现它的类是可序列化的。虽然一个类是可以被序列化的，但是并不意味着类中的所有字段都会被序列化，下面两种情况就不会被序列化</p>
+<ol>
+<li>字段被声明为 <code>transient</code>，这个关键字用于表示一个字段不应该被序列化。</li>
+<li>字段是静态的，静态字段属于类，而不是类的一个实例，因此它们不会被序列化。</li>
+</ol>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><p>下面是一个经典的序列化与反序列化过程，可以结合注释进行理解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//序列化</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//创建一个新的ExploitObject对象，并将其引用存储在变量obj中</span></span><br><span class="line"><span class="type">ExploitObject</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ExploitObject</span>();</span><br><span class="line"><span class="comment">//创建一个新的FileOutputStream对象，用于向&quot;exploit.ser&quot;文件写入数据</span></span><br><span class="line"><span class="type">FileOutputStream</span> <span class="variable">fos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;exploit.ser&quot;</span>);</span><br><span class="line"><span class="comment">//创建一个ObjectOutputStream对象，用于将对象写入到上面的文件中</span></span><br><span class="line"><span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(fos);</span><br><span class="line"><span class="comment">//将对象写入到文件&quot;exploit.ser&quot;</span></span><br><span class="line">oos.writeObject(obj);</span><br><span class="line">oos.close();</span><br><span class="line"></span><br><span class="line"><span class="comment">//创建一个FileInputStream对象，用于从名为&quot;exploit.ser&quot;的文件中读取数据</span></span><br><span class="line"><span class="type">FileInputStream</span> <span class="variable">fis</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;exploit.ser&quot;</span>);</span><br><span class="line"><span class="comment">//创建了一个新的ObjectInputStream对象，它装饰了FileInputStream对象，以便可以从文件中读取对象。</span></span><br><span class="line"><span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(fis);</span><br><span class="line">ois.readObject(); <span class="comment">//从文件&quot;exploit.ser&quot;中读取对象</span></span><br><span class="line">ois.close();</span><br></pre></td></tr></table></figure>
+
+<p>值得注意到地方是<code>ois.readObject()</code>这句代码，也即是反序列化代码，攻击者可以恶意构造并去执行一个方法用于执行恶意命令，从而<code>getshell</code>。</p>
+<h2 id="反序列化利用测试"><a href="#反序列化利用测试" class="headerlink" title="反序列化利用测试"></a>反序列化利用测试</h2><h3 id="简单示例"><a href="#简单示例" class="headerlink" title="简单示例"></a>简单示例</h3><p>​		以一个简单的例子为例，我们定义了一个<code>ExploitObject</code>类，其中包含一个<code>readObject()</code>方法，这个方法在反序列化过程中会被自动执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ExploitObject</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(ObjectInputStream in)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">        <span class="comment">//调用默认的反序列化方法</span></span><br><span class="line">        in.defaultReadObject();</span><br><span class="line">        <span class="comment">//弹出计算器程序</span></span><br><span class="line">        Runtime.getRuntime().exec(<span class="string">&quot;calc&quot;</span>); </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​		在上面个例子中，我们创建了一个实现了<code>Serializable</code>接口的<code>ExploitObject</code>类，这个类重写了<code>readObject</code>方法，并且这个方法会在反序列化过程中自动被调用执行，那么就会去执行<code>Runtime.getRuntime().exec(&quot;calc&quot;)</code>这行代码，从而打开计算器程序。而在真实场景中，可以直接实现<code>任意命令执行</code>、<code>反弹shell</code>等操作。</p>
+<h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p><strong>完整代码如下</strong></p>
+<p>​		在<code>序列化/反序列化</code>框架中，<code>readObject()</code> 的自动调用是一种特性，因此在重写这个方法并插入弹出计算器的代码后，只要触发反序列化，那么这个方法就一定会被调用，从而执行里面的<code>Runtime.getRuntime().exec(&quot;calc&quot;)</code>代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ExploitObject</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(ObjectInputStream in)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">        <span class="comment">//调用默认的反序列化方法</span></span><br><span class="line">        in.defaultReadObject();</span><br><span class="line">        <span class="comment">//弹出计算器程序</span></span><br><span class="line">        Runtime.getRuntime().exec(<span class="string">&quot;calc&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ExploitTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="comment">// 创建一个ExploitObject对象，并将其序列化到一个文件中</span></span><br><span class="line">        <span class="type">ExploitObject</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ExploitObject</span>();</span><br><span class="line">        <span class="type">FileOutputStream</span> <span class="variable">fos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;exploit.ser&quot;</span>);</span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(fos);</span><br><span class="line">        oos.writeObject(obj);</span><br><span class="line">        oos.close();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 从文件中反序列化ExploitObject对象</span></span><br><span class="line">        <span class="type">FileInputStream</span> <span class="variable">fis</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;exploit.ser&quot;</span>);</span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(fis);</span><br><span class="line">        ois.readObject();<span class="comment">//在反序列化过程中，会自动调用readObject()方法，从而执行命令打开计算器</span></span><br><span class="line">        ois.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行后成功弹出计算器</p>
+<p><img src="/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690965077523.png" alt="1690965077523"></p>
+<h3 id="断点调试分析"><a href="#断点调试分析" class="headerlink" title="断点调试分析"></a>断点调试分析</h3><p>跟进到将序列化数据写入到文件<code>exploit.ser</code>中</p>
+<p><img src="/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690965277308.png" alt="1690965277308"></p>
+<p>使用<code>010editor</code>打开文件<code>exploit.ser</code>，我们可以根据二进制数据<code>AC ED 00 05</code> 可以知道此次序列化成功，而从<code>0x08~0x13</code>的数据段可以看到<code>ExploitObject</code>的完整类名，如果对序列化后的二进制字节含义有兴趣，可以参考文章<a target="_blank" rel="noopener" href="https://www.cnblogs.com/senlinyang/p/8204752.html">Java序列化机制原理</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">AC ED ：STREAM_MAGIC声明使用了序列化协议</span><br><span class="line">00 05 ：STREAM_VERSION序列化协议版本</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690965379076.png" alt="1690965379076"></p>
+<p>跟进到<code>ois.readObject()</code>，可以看到在反序列化的过程中，直接调用了<code>readObject()</code>方法，从而执行了里面测试代码<code>Runtime.getRuntime().exec(&quot;calc&quot;)</code></p>
+<p><img src="/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690967754745.png" alt="1690967754745"></p>
+<p><img src="/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/1690967881264.png" alt="1690967881264"></p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/senlinyang/p/8204752.html">Java序列化机制原理</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.wxylyw.com/2018/11/07/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E-1/">理解Java反序列化漏洞</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/01/12/Spring-Beans-RCE%EF%BC%88CVE-2022-22965%EF%BC%89%E6%BC%8F%E6%B4%9E%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/" rel="prev" title="Spring Beans RCE（CVE-2022-22965）漏洞代码分析">
+      <i class="fa fa-chevron-left"></i> Spring Beans RCE（CVE-2022-22965）漏洞代码分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/03/17/Windows%E4%B8%8B%E9%85%8D%E7%BD%AEPHP%E6%96%AD%E7%82%B9%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83%EF%BC%88phpstudy-PHPStorm-Xdebug%EF%BC%89/" rel="next" title="Windows下配置PHP断点调试环境（phpstudy+PHPStorm+Xdebug）">
+      Windows下配置PHP断点调试环境（phpstudy+PHPStorm+Xdebug） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E"><span class="nav-number">2.</span> <span class="nav-text">了解Java反序列化漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%BA%8F%E5%88%97%E5%8C%96%E5%92%8C%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="nav-number">2.1.</span> <span class="nav-text">什么是序列化和反序列化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.2.</span> <span class="nav-text">代码实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%A9%E7%94%A8%E6%B5%8B%E8%AF%95"><span class="nav-number">3.</span> <span class="nav-text">反序列化利用测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.1.</span> <span class="nav-text">简单示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8"><span class="nav-number">3.2.</span> <span class="nav-text">漏洞利用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%AD%E7%82%B9%E8%B0%83%E8%AF%95%E5%88%86%E6%9E%90"><span class="nav-number">3.3.</span> <span class="nav-text">断点调试分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Yuband</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+<div class="cc-license animated" itemprop="sponsor">
+  <a href="https://www.netlify.com" class="cc-opacity" title="Deploy with Netlify → https://www.netlify.com" target="_blank"><img width="80" src="https://www.netlify.com/img/global/badges/netlify-dark.svg" alt="Netlify"></a>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yuband</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
