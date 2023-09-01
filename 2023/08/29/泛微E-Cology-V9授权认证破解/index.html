@@ -249,6 +249,8 @@
 <h2 id="寻找入口点"><a href="#寻找入口点" class="headerlink" title="寻找入口点"></a>寻找入口点</h2><h3 id="找到license校验入口"><a href="#找到license校验入口" class="headerlink" title="找到license校验入口"></a>找到license校验入口</h3><p>进入管理员页面，输入账密进行登录：<code>sysadmin/Weaver@2001</code></p>
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692521595225.png" alt="1692521595225"></p>
 <p>此处提示没有授权，我们可以自行构造一个<code>1.license</code>文件进行测试并抓包，输入默认验证码：<code>wEAver2018</code></p>
+<span id="more"></span>
+
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1693211838563.png" alt="1693211838563"></p>
 <p>可以得到如下URL：<code>http://xxx:8888/api/system/license/LicenseOperation</code></p>
 <p>需要关注的字符串为<code>LicenseOperation</code>，字面意思就是对处理License信息</p>
