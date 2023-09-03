@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="破解重点找到处理注册函数的位置，打上patch 1根据程序显示的&quot;&lt;unregistered &quot;字符串，找到引用该地址的汇编代码  破解问题 无法在win7运行，可能需要在XP上面跑，  开始破解破解一（修改判断逻辑）分析与破解过程首先打开程序，看到上面显示的未注册，我们可以定位到字符串位置：&lt;unregistered  选择查找—&gt;所有参考文本字串，然后拖到">
+<meta property="og:type" content="article">
+<meta property="og:title" content="pcsurgeon程序破解">
+<meta property="og:url" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/index.html">
+<meta property="og:site_name" content="Yuband&#39;s blog">
+<meta property="og:description" content="破解重点找到处理注册函数的位置，打上patch 1根据程序显示的&quot;&lt;unregistered &quot;字符串，找到引用该地址的汇编代码  破解问题 无法在win7运行，可能需要在XP上面跑，  开始破解破解一（修改判断逻辑）分析与破解过程首先打开程序，看到上面显示的未注册，我们可以定位到字符串位置：&lt;unregistered  选择查找—&gt;所有参考文本字串，然后拖到">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1687782371391.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260038823.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260124988.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260227282.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260312915.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260398316.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263390397.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263490977.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263545144.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263662688.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263765717.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263984191.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689264016694.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691137964.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691194958.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691480656.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691572488.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691614994.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691916878.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691958162.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689692079948.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693041865.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693425366.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693506484.png">
+<meta property="og:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693535166.png">
+<meta property="article:published_time" content="2022-10-15T02:35:14.000Z">
+<meta property="article:modified_time" content="2022-10-15T02:35:14.000Z">
+<meta property="article:author" content="Yuband">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1687782371391.png">
+
+<link rel="canonical" href="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>pcsurgeon程序破解 | Yuband's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yuband's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yuband">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yuband's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          pcsurgeon程序破解
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-10-15 10:35:14" itemprop="dateCreated datePublished" datetime="2022-10-15T10:35:14+08:00">2022-10-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/" itemprop="url" rel="index"><span itemprop="name">OllyDebug</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OllyDebug/%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">逆向破解</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="破解重点"><a href="#破解重点" class="headerlink" title="破解重点"></a>破解重点</h3><p>找到处理注册函数的位置，打上patch</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">根据程序显示的&quot;&lt;unregistered &quot;字符串，找到引用该地址的汇编代码</span><br></pre></td></tr></table></figure>
+
+<p>破解问题</p>
+<p>无法在win7运行，可能需要在XP上面跑，</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1687782371391.png" alt="1687782371391"></p>
+<h3 id="开始破解"><a href="#开始破解" class="headerlink" title="开始破解"></a>开始破解</h3><h4 id="破解一（修改判断逻辑）"><a href="#破解一（修改判断逻辑）" class="headerlink" title="破解一（修改判断逻辑）"></a>破解一（修改判断逻辑）</h4><h5 id="分析与破解过程"><a href="#分析与破解过程" class="headerlink" title="分析与破解过程"></a>分析与破解过程</h5><p>首先打开程序，看到上面显示的未注册，我们可以定位到字符串位置：<code>&lt;unregistered</code></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260038823.png" alt="1689260038823"></p>
+<p>选择<code>查找</code>—&gt;<code>所有参考文本字串</code>，然后拖到最上面，右键选择<code>查找文本</code></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260124988.png" alt="1689260124988"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260227282.png" alt="1689260227282"></p>
+<p>找到了符合的字符串，然后双击找到引用该字符串的位置，我们可以发现，在该处汇编的上一行明显有一个跳转判断，可以猜测若跳过下面的执行，则越过了输出未注册字样，因此在此处jnz处打上断点</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260312915.png" alt="1689260312915"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689260398316.png" alt="1689260398316"></p>
+<p>重新运行，显然此处并没有跳转，而是下面获取了未注册字样，我们先尝试将标志位<code>z</code>置为0</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263390397.png" alt="1689263390397"></p>
+<p>越过后，顶部的显示消失了，然后点击<code>help</code>，查看未注册是否还在显示</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263490977.png" alt="1689263490977"></p>
+<p>显然还是属于未注册</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263545144.png" alt="1689263545144"></p>
+<p>继续查找字符串<code>&lt;Unregistered Version&gt;</code>，同样的，也是在获取字符串的上面有一个跳转，打上断点，然后修改标注位，成功破解</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263662688.png" alt="1689263662688"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263765717.png" alt="1689263765717"></p>
+<h5 id="打Patch"><a href="#打Patch" class="headerlink" title="打Patch"></a>打Patch</h5><p>一共两处需要跳转，都修改为<code>jmp</code>即可，保存为新文件<code>pcsurgeon1.exe</code>，运行后显示注册成功</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689263984191.png" alt="1689263984191"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689264016694.png" alt="1689264016694"></p>
+<h4 id="破解二（修改认证文件OR数据？）"><a href="#破解二（修改认证文件OR数据？）" class="headerlink" title="破解二（修改认证文件OR数据？）"></a>破解二（修改认证文件OR数据？）</h4><h5 id="破解分析"><a href="#破解分析" class="headerlink" title="破解分析"></a>破解分析</h5><p>同样根据特殊字符串<code>&lt;unregistered</code>进行定位，并在上面打一个断点，汇编代码如下，这里有两处比较，且都是<code>jnz pcsurgeo.005CC935</code>，这里可以猜测若第一个直接跳转，则不需要走第二个点</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">005CC820   .  A1 8CEB6000   mov eax,dword ptr ds:[0x60EB8C]</span><br><span class="line">005CC825   .  8038 00       cmp byte ptr ds:[eax],0x0</span><br><span class="line">005CC828   .  0F85 07010000 jnz pcsurgeo.005CC935</span><br><span class="line">005CC82E   .  A1 DCF16000   mov eax,dword ptr ds:[0x60F1DC]</span><br><span class="line">005CC833   .  8038 00       cmp byte ptr ds:[eax],0x0</span><br><span class="line">005CC836   .  0F85 F9000000 jnz pcsurgeo.005CC935</span><br></pre></td></tr></table></figure>
+
+<p>首先EAX的值为<code>4A 0C 61 00</code>，转换为内存地址为<code>0X00610C4A</code></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691137964.png" alt="1689691137964"></p>
+<p>然后<code>ds:[eax]</code>的值为<code>00 00 00 00</code>，这也导致了后面的CMP比较相等，ZF置为1，无法跳转，弹出了未注册标识，此处的想法是更改掉<code>ds:[eax]</code>的值进行绕过，可以先改为1然后试试</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691194958.png" alt="1689691194958"></p>
+<p>这里我们需要找到程序是在哪里给<code>ds:[eax]</code>赋值的，所以需要<code>右键</code>选择<code>参考</code>，然后选择<code>地址常量</code>，找到所有引用该地址的地方</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691480656.png" alt="1689691480656"></p>
+<p>然后给所有地址打上断点，重新运行程序</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691572488.png" alt="1689691572488"></p>
+<p>下面既是对关键字进行赋值，其中第二行赋值操作既是对上面的<code>ds:[eax]</code>进行赋值，这里可以直接将al替换成<code>0x01</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#将校验文件地址存储到EDX寄存器</span><br><span class="line">005C2BF6   .  8B15 8CEB6000 mov edx,dword ptr ds:[0x60EB8C]; pcsurgeo.00610C4A</span><br><span class="line">#将al赋值给校验地址</span><br><span class="line">005C2BFC   .  8802          mov byte ptr ds:[edx],al</span><br><span class="line">005C2BFE   .  A1 8CEB6000   mov eax,dword ptr ds:[0x60EB8C]</span><br><span class="line">005C2C03   .  8038 00       cmp byte ptr ds:[eax],0x0</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691614994.png" alt="1689691614994"></p>
+<p>修改如下，右键选择保存，但是报错了，提示修改了重定位信息，这是因为mov操作寄存器或者立即数时，对应的机器码不相等，原本操作寄存器时，机器码为：<code>88 02</code>，而立即数对应了<code>C6 02 01</code>，打乱了后面的汇编指令，造成了一堆NOP指令，这里报错可以先忽略，直接保存文件看看是否正常运行</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691916878.png" alt="1689691916878"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689691958162.png" alt="1689691958162"></p>
+<p>打开破解后的文件，已注册</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689692079948.png" alt="1689692079948"></p>
+<h5 id="解决重定位报错"><a href="#解决重定位报错" class="headerlink" title="解决重定位报错"></a>解决重定位报错</h5><h6 id="方法一（失败）"><a href="#方法一（失败）" class="headerlink" title="方法一（失败）"></a>方法一（失败）</h6><p>想办法填充NOP的位置，一共四个NOP指令，也就是4字节，可以使用<code> mov eax,eax</code>操作，不对正常业务造成影响，刚好占用两个字节，使用两次即可</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">89C0          mov eax,eax</span><br><span class="line">89C0          mov eax,eax</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693041865.png" alt="1689693041865"></p>
+<p>失败原因：后面CMP操作会比较EAX的值，这样会影响正常业务</p>
+<h6 id="方法二（成功）"><a href="#方法二（成功）" class="headerlink" title="方法二（成功）"></a>方法二（成功）</h6><p>重点放在下面几行汇编中，这是判断加跳转的语句，由于<code>ds:[eax]==0x01</code>，不等于<code>0x0</code>，那么下面的跳转一定会实现，所以我们可以直接更改代码逻辑</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">005C2BFE      A1 8CEB6000   mov eax,dword ptr ds:[0x60EB8C]</span><br><span class="line">005C2C03      8038 00       cmp byte ptr ds:[eax],0x0</span><br><span class="line">005C2C06   .  75 0D         jnz short pcsurgeo.005C2C15</span><br></pre></td></tr></table></figure>
+
+<p>放弃CMP比较操作，直接改为赋值，解决了上面的NOP问题，然后直接使用<code>JMP</code>进行跳转</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">005C2C03      C600 01       mov byte ptr ds:[eax],0x1</span><br><span class="line">005C2C06      EB 0D         jmp short pcsurgeo.005C2C15</span><br><span class="line">005C2C08   .  E8 6307EEFF   call pcsurgeo.004A3370</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693425366.png" alt="1689693425366"></p>
+<p>这次保存文件没有报错了，程序正常启动并且成功破解</p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693506484.png" alt="1689693506484"></p>
+<p><img src="/2022/10/15/pcsurgeon%E7%A8%8B%E5%BA%8F%E7%A0%B4%E8%A7%A3/1689693535166.png" alt="1689693535166"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/17/VisualSite_Designer%E9%80%86%E5%90%91%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90/" rel="prev" title="VisualSite Designer逆向破解分析">
+      <i class="fa fa-chevron-left"></i> VisualSite Designer逆向破解分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/01/12/Spring-Beans-RCE%EF%BC%88CVE-2022-22965%EF%BC%89%E6%BC%8F%E6%B4%9E%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/" rel="next" title="Spring Beans RCE（CVE-2022-22965）漏洞代码分析">
+      Spring Beans RCE（CVE-2022-22965）漏洞代码分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A0%B4%E8%A7%A3%E9%87%8D%E7%82%B9"><span class="nav-number">1.</span> <span class="nav-text">破解重点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%A7%8B%E7%A0%B4%E8%A7%A3"><span class="nav-number">2.</span> <span class="nav-text">开始破解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A0%B4%E8%A7%A3%E4%B8%80%EF%BC%88%E4%BF%AE%E6%94%B9%E5%88%A4%E6%96%AD%E9%80%BB%E8%BE%91%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">破解一（修改判断逻辑）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E4%B8%8E%E7%A0%B4%E8%A7%A3%E8%BF%87%E7%A8%8B"><span class="nav-number">2.1.1.</span> <span class="nav-text">分析与破解过程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%89%93Patch"><span class="nav-number">2.1.2.</span> <span class="nav-text">打Patch</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A0%B4%E8%A7%A3%E4%BA%8C%EF%BC%88%E4%BF%AE%E6%94%B9%E8%AE%A4%E8%AF%81%E6%96%87%E4%BB%B6OR%E6%95%B0%E6%8D%AE%EF%BC%9F%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">破解二（修改认证文件OR数据？）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%A0%B4%E8%A7%A3%E5%88%86%E6%9E%90"><span class="nav-number">2.2.1.</span> <span class="nav-text">破解分析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E9%87%8D%E5%AE%9A%E4%BD%8D%E6%8A%A5%E9%94%99"><span class="nav-number">2.2.2.</span> <span class="nav-text">解决重定位报错</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%88%E5%A4%B1%E8%B4%A5%EF%BC%89"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">方法一（失败）</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%88%E6%88%90%E5%8A%9F%EF%BC%89"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">方法二（成功）</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Yuband</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+<div class="cc-license animated" itemprop="sponsor">
+  <a href="https://www.netlify.com" class="cc-opacity" title="Deploy with Netlify → https://www.netlify.com" target="_blank"><img width="80" src="https://www.netlify.com/img/global/badges/netlify-dark.svg" alt="Netlify"></a>
+</div>
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yuband</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
