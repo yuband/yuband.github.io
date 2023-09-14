@@ -269,7 +269,7 @@
 <h4 id="路由配置文件"><a href="#路由配置文件" class="headerlink" title="路由配置文件"></a>路由配置文件</h4><p>OA系统一般都会有一个路由配置文件，通常位于web应用的<code>WEB-INF</code>目录下，我们可以自定义<code>find</code>命令去检索该目录的所有配置文件，找到包含字符串<code>ln</code>的相关配置，这里能看到<code>web.xml</code>里面定义了<code>ln.LNFilter</code>的过滤类，以及根据文件名找到了<code>jarlist_9.info</code>中的<code>ljstln.jar</code></p>
 <p><code>find . -maxdepth 1 -type f -exec grep -i ln &#123;&#125; +</code></p>
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692534646183.png" alt="1692534646183"></p>
-<p>检查jar包中是否有相应的<code>LN</code>文件，由此确认该包是我们需要的</p>
+<p>检查jar包中是否有相应的<code>LN</code>类，由此确认该包是我们需要的</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jar -tvf ./WEB-INF/lib/ljstln.jar | grep ln/LN</span><br></pre></td></tr></table></figure>
 
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692537577336.png" alt="1692537577336"></p>
