@@ -36,6 +36,7 @@
 <meta property="og:image" content="http://example.com/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692534646183.png">
 <meta property="og:image" content="http://example.com/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692537577336.png">
 <meta property="og:image" content="http://example.com/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692538501294.png">
+<meta property="og:image" content="http://example.com/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1694683144048.png">
 <meta property="og:image" content="http://example.com/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692539160875.png">
 <meta property="og:image" content="http://example.com/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692539721679.png">
 <meta property="og:image" content="http://example.com/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692539800251.png">
@@ -272,8 +273,14 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jar -tvf ./WEB-INF/lib/ljstln.jar | grep ln/LN</span><br></pre></td></tr></table></figure>
 
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692537577336.png" alt="1692537577336"></p>
-<h4 id="批量搜索Jar包"><a href="#批量搜索Jar包" class="headerlink" title="批量搜索Jar包"></a>批量搜索Jar包</h4><p>第二种方法则是找到存放jar包的目录，然后批量检查，这里使用find命令可以知道该lib目录位于<code>/usr/weaver/ecology/WEB-INF/lib</code>，然后使用命令<code>for jar in /usr/weaver/ecology/WEB-INF/lib/*.jar; do    jar -tvf $jar | grep ln/LN; done</code>批量检查</p>
+<h4 id="批量搜索Jar包"><a href="#批量搜索Jar包" class="headerlink" title="批量搜索Jar包"></a>批量搜索Jar包</h4><p>第二种方法则是找到存放jar包的目录，然后批量检查，这里使用find命令可以知道该lib目录位于<code>/usr/weaver/ecology/WEB-INF/lib</code>，然后使用如下命令进行批量检查</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> jar in /usr/weaver/ecology/WEB-INF/lib<span class="comment">/*.jar; do    jar -tvf $jar | grep ln/LN; done</span></span><br></pre></td></tr></table></figure>
+
 <p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1692538501294.png" alt="1692538501294"></p>
+<p>或者使用精确的搜索方式，拿到对应jar包的完整路径: <code>/usr/weaver/ecology/WEB-INF/lib/ljstln.jar</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">search=<span class="string">&quot;ln/LN&quot;</span>; <span class="keyword">for</span> jar <span class="keyword">in</span> /usr/weaver/ecology/WEB-INF/lib/*.jar; <span class="keyword">do</span> <span class="keyword">if</span> jar -tvf <span class="variable">$jar</span> | grep -q <span class="variable">$search</span>; <span class="keyword">then</span> <span class="built_in">echo</span> <span class="variable">$jar</span>; jar -tvf <span class="variable">$jar</span> | grep <span class="variable">$search</span>; <span class="keyword">fi</span>; <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/08/29/%E6%B3%9B%E5%BE%AEE-Cology-V9%E6%8E%88%E6%9D%83%E8%AE%A4%E8%AF%81%E7%A0%B4%E8%A7%A3/1694683144048.png" alt="1694683144048"></p>
 <h2 id="调试分析"><a href="#调试分析" class="headerlink" title="调试分析"></a>调试分析</h2><h3 id="调试准备"><a href="#调试准备" class="headerlink" title="调试准备"></a>调试准备</h3><p>ecology使用的是resin服务器，根目录为<code>/usr/weaver/Resin4</code>，而resin想要远程调试的话，需要修改配置文件<code>conf/resin.properties</code>，添加如下调试配置到<code>jvm_args</code>参数中</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=2012</span><br></pre></td></tr></table></figure>
 
